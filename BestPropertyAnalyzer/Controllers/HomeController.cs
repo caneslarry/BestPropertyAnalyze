@@ -1,37 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Xml.Linq;
+using BestPropertyAnalyzer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using BestPropertyAnalyzer.Models;
-using System.Collections.Specialized;
-using System.Web;
-using System.Net.Http;
-using System.Net;
-using System.Xml;
-using Zillow.Services;
-using Zillow.Services.Schema;
-using System.Text.Json;
-using System.Collections;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
-using System.Net;
-using Newtonsoft.Json;
-using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace BestPropertyAnalyzer.Controllers
 {
     public class HomeController : Controller
     {
+        // This would come from a ZillowAPI 
         public const double RestEstimate = 1500.00;
         public const double Mortgage = 1100.00;
         public const double Tax = 00.00;
         public const double Insurance = 100.00;
 
-        private string[] ignoreList = { "PropertyRecords", "details", "Building_Area" };
+        private string[] ignoreList = { "PropertyRecords", "details", "Building_Area","parcel_snapshot" };
 
         private const string ZWSID = "X1-ZWz16rr2tjewwb_9hc6e";
 
@@ -46,11 +32,6 @@ namespace BestPropertyAnalyzer.Controllers
         }
 
         public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
         {
             return View();
         }
@@ -76,6 +57,7 @@ namespace BestPropertyAnalyzer.Controllers
             {
                 try
                 {
+                    // Grab data from qurantarium API for the address/citystatezip
                     jsonData = webClient.DownloadString(url);
 
                     //TODO: jsonData can be null
@@ -94,6 +76,7 @@ namespace BestPropertyAnalyzer.Controllers
 
             }
 
+            // Get more details by the property id
             url = "https://qvmservices-test.quantarium.com/QDataService/GetPropertyRecordsXml?u=KnoxHoldings-Test&k=fP0uwn;K73Jgs=dg&id=" + house.id;
 
             XDocument xmlDoc = XDocument.Load(url);
@@ -102,7 +85,8 @@ namespace BestPropertyAnalyzer.Controllers
             {
                 if (!ignoreList.Contains<string>(node.Name.LocalName))
                 {
-                    house.Details += node.Name.LocalName + ": " + node.Value + "<br/>";
+                    // TODO: Take the markup out of the controller
+                    house.Details += "<div class='card col-sm-6'><label>" + node.Name.LocalName + "</label>" + node.Value + "</div>";
                 }
             }
 
